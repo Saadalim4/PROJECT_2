@@ -1,0 +1,50 @@
+#weather_agent.py
+import requests
+from utils.api_keys import WEATHER_API_URL, WEATHER_API_KEY
+
+class WeatherAgent:
+    def __init__(self):
+        self.name = "WeatherAgent"
+        self.description = "Fetches weather for given coordinates or city"
+    
+    def get_weather_data(self, latitude: float, longitude: float) -> dict:
+        """Fetches weather data for given coordinates.
+        
+        Args:
+            latitude (float): Latitude coordinate
+            longitude (float): Longitude coordinate
+            
+        Returns:
+            dict: Weather data including description, temperature, humidity, and wind speed
+        """
+        params = {
+            "lat": latitude,
+            "lon": longitude,
+            "appid": WEATHER_API_KEY,
+            "units": "metric"
+        }
+         
+        try:
+            r = requests.get(WEATHER_API_URL, params=params)
+            r.raise_for_status()
+            data = r.json()
+             
+            return {
+                "status": "success",
+                "description": data["weather"][0]["description"],
+                "temp": data["main"]["temp"],
+                "humidity": data["main"]["humidity"],
+                "wind_speed": data["wind"]["speed"]
+            }
+        except requests.RequestException as e:
+            return {"status": "error", "error_message": f"Error fetching weather data: {str(e)}"}
+        except KeyError as e:
+            return {"status": "error", "error_message": f"Error parsing weather data: {str(e)}"}
+    
+    def get_tool_function(self):
+        """Returns the function to be used as a tool by other agents"""
+        return self.get_weather_data
+    
+    def run(self, *, latitude, longitude):
+        """Legacy method for backward compatibility"""
+        return self.get_weather_data(latitude, longitude)

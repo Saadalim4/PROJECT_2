@@ -1,0 +1,5 @@
+requests
+python-dotenv
+streamlit
+google-generativeai[agent]
+google-adk

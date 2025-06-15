@@ -1,0 +1,31 @@
+#main.py
+from google.adk.agents import Agent
+from agents.launch_agent import LaunchAgent
+from agents.weather_agent import WeatherAgent  
+from agents.summary_agent import SummaryAgent
+from agents.planner import LaunchPlanner
+
+def execute(goal, city=None, lat=None, lon=None):
+    # Create a coordinating agent that uses other agents as tools
+    runtime = Agent(
+        name="MultiAgentRuntime",
+        model="gemini-2.0-flash",
+        description="Coordinates weather, launch, and summary agents for mission planning",
+        instruction="You coordinate multiple specialized agents to analyze weather, assess launch conditions, and provide summaries.",
+        tools=[
+            LaunchAgent().get_tool_function(),
+            WeatherAgent().get_tool_function(), 
+            SummaryAgent().get_tool_function()
+        ]
+    )
+    
+    # Add location context if provided
+    context = ""
+    if city:
+        context = f" for {city}"
+    elif lat and lon:
+        context = f" for coordinates {lat}, {lon}"
+    
+    # Execute the goal
+    result = runtime.run(goal + context)
+    return result

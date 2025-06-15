@@ -1,0 +1,83 @@
+#planner.py
+from google.adk.agents import Agent
+
+class LaunchPlanner:
+    def __init__(self):
+        self.name = "LaunchPlanner"
+        self.description = "Plans and coordinates launch operations"
+        
+        # Create the planning agent
+        self.planner_agent = Agent(
+            name="LaunchPlannerAgent",
+            model="gemini-2.0-flash",
+            description="Strategic planner for launch operations with weather and safety considerations",
+            instruction="""You are a strategic launch planner. When given a mission goal, create a comprehensive 
+            execution plan that coordinates weather analysis, safety assessment, and final recommendations. 
+            Always consider the sequence of operations and dependencies between different assessments."""
+        )
+    
+    def create_plan(self, goal: str) -> dict:
+        """Creates a comprehensive launch plan.
+        
+        Args:
+            goal (str): Mission objective
+            
+        Returns:
+            dict: Detailed execution plan
+        """
+        planning_prompt = f"""
+        Create a detailed launch execution plan for this mission: {goal}
+        
+        Consider these aspects:
+        1. Weather data collection and analysis
+        2. Safety assessment protocols
+        3. Go/No-Go decision criteria
+        4. Contingency planning
+        5. Timeline coordination
+        
+        Provide a structured plan with clear steps and decision points.
+        """
+        
+        try:
+            plan_response = self.planner_agent.run(planning_prompt)
+            
+            return {
+                "status": "success",
+                "mission_objective": goal,
+                "detailed_plan": plan_response,
+                "execution_steps": [
+                    "1. Fetch current weather conditions for launch site",
+                    "2. Analyze weather impact on launch operations", 
+                    "3. Perform comprehensive safety assessment",
+                    "4. Generate summary with go/no-go recommendation",
+                    "5. Execute launch or implement hold procedures"
+                ],
+                "coordination": {
+                    "weather_check": "WeatherAgent provides current conditions",
+                    "safety_assessment": "LaunchAgent evaluates launch readiness",
+                    "final_summary": "SummaryAgent compiles findings and recommendations"
+                },
+                "success_criteria": [
+                    "Weather conditions within acceptable parameters",
+                    "All safety checks passed",
+                    "Clear go/no-go recommendation provided",
+                    "Contingency plans ready if needed"
+                ]
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "error_message": f"Planning error: {str(e)}",
+                "fallback_plan": {
+                    "mission_objective": goal,
+                    "basic_steps": [
+                        "Check weather conditions",
+                        "Assess safety requirements", 
+                        "Make go/no-go decision"
+                    ]
+                }
+            }
+    
+    def run(self, *, goal):
+        """Legacy method for backward compatibility"""
+        return self.create_plan(goal)

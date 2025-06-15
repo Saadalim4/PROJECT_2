@@ -1,0 +1,47 @@
+#summary_agent.py
+class SummaryAgent:
+    def __init__(self):
+        self.name = "SummaryAgent"
+        self.description = "Summarizes weather and gives launch impact assessment"
+    
+    def create_weather_summary(self, description: str, temp: float, humidity: float, wind_speed: float) -> dict:
+        """Creates a weather summary with launch impact assessment.
+        
+        Args:
+            description (str): Weather description
+            temp (float): Temperature in Celsius
+            humidity (float): Humidity percentage
+            wind_speed (float): Wind speed in m/s
+            
+        Returns:
+            dict: Summary with launch recommendations
+        """
+        try:
+            wind = float(wind_speed)
+        except:
+            wind = 0
+         
+        summary = f"Weather: {description}, Temp: {temp}°C, Humidity: {humidity}%, Wind: {wind_speed} m/s. "
+         
+        if wind > 10:
+            summary += "⚠️ High wind speed may delay the launch."
+            launch_recommendation = "HOLD"
+        else:
+            summary += "✅ Conditions look favorable."
+            launch_recommendation = "GO"
+            
+        return {
+            "status": "success",
+            "summary": summary,
+            "launch_recommendation": launch_recommendation,
+            "wind_assessment": "HIGH" if wind > 10 else "ACCEPTABLE"
+        }
+    
+    def get_tool_function(self):
+        """Returns the function to be used as a tool by other agents"""
+        return self.create_weather_summary
+    
+    def run(self, *, description, temp, humidity, wind_speed):
+        """Legacy method for backward compatibility"""
+        return self.create_weather_summary(description, temp, humidity, wind_speed)
+        

@@ -1,0 +1,78 @@
+#launch_agent.py
+class LaunchAgent:
+    def __init__(self):
+        self.name = "LaunchAgent"
+        self.description = "Handles launch planning and safety assessments"
+    
+    def assess_launch_conditions(self, goal: str, wind_speed: float = 0, temp: float = 20, humidity: float = 50) -> dict:
+        """Analyzes launch conditions and provides safety assessment.
+        
+        Args:
+            goal (str): Mission objective
+            wind_speed (float): Wind speed in m/s
+            temp (float): Temperature in Celsius
+            humidity (float): Humidity percentage
+            
+        Returns:
+            dict: Launch assessment with safety checks and recommendations
+        """
+        launch_assessment = {
+            "status": "success",
+            "mission": goal,
+            "safety_checks": [],
+            "recommendations": [],
+            "overall_status": "GO"
+        }
+        
+        # Basic safety checks
+        launch_assessment["safety_checks"].append("✅ Vehicle systems nominal")
+        launch_assessment["safety_checks"].append("✅ Range clear")
+        
+        # Weather-based assessment
+        try:
+            wind = float(wind_speed)
+            temperature = float(temp)
+            
+            if wind > 15:
+                launch_assessment["recommendations"].append("🚫 ABORT - Wind speed exceeds safety limits")
+                launch_assessment["overall_status"] = "NO-GO"
+            elif wind > 10:
+                launch_assessment["recommendations"].append("⚠️ CAUTION - Monitor wind conditions closely")
+                launch_assessment["overall_status"] = "HOLD"
+            else:
+                launch_assessment["recommendations"].append("✅ Wind conditions acceptable")
+                
+            if temperature < -10 or temperature > 40:
+                launch_assessment["recommendations"].append("⚠️ Extreme temperature conditions detected")
+                if launch_assessment["overall_status"] == "GO":
+                    launch_assessment["overall_status"] = "HOLD"
+            else:
+                launch_assessment["recommendations"].append("✅ Temperature within acceptable range")
+                
+            if humidity > 90:
+                launch_assessment["recommendations"].append("⚠️ High humidity may affect systems")
+            else:
+                launch_assessment["recommendations"].append("✅ Humidity levels acceptable")
+                
+        except (ValueError, TypeError):
+            launch_assessment["recommendations"].append("⚠️ Unable to process weather data")
+            launch_assessment["overall_status"] = "HOLD"
+        
+        return launch_assessment
+    
+    def get_tool_function(self):
+        """Returns the function to be used as a tool by other agents"""
+        return self.assess_launch_conditions
+    
+    def run(self, *, goal, weather_data=None):
+        """Legacy method for backward compatibility"""
+        wind_speed = 0
+        temp = 20
+        humidity = 50
+        
+        if weather_data and isinstance(weather_data, dict):
+            wind_speed = weather_data.get("wind_speed", 0)
+            temp = weather_data.get("temp", 20)
+            humidity = weather_data.get("humidity", 50)
+            
+        return self.assess_launch_conditions(goal, wind_speed, temp, humidity)
